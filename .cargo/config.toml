@@ -1,0 +1,2 @@
+[alias]
+tauri = "run --manifest-path src-tauri/Cargo.toml --package xtask --"

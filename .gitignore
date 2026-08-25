@@ -1,0 +1,11 @@
+# Rust / Tauri build artifacts
+target/
+# generated Tauri scaffolding
+src-tauri/gen/
+
+# frontend (none currently, but keep the door closed)
+node_modules/
+dist/
+
+# local pairing config may be written here during dev runs
+config.json

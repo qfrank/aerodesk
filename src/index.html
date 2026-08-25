@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AeroDesk</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">AeroDesk</div>
+      <div class="subtitle" id="desk-name">—</div>
+    </header>
+
+    <section id="ax-banner" class="banner hidden">
+      <div data-i18n="axTitle">Accessibility required</div>
+      <div class="muted" data-i18n="axBody">
+        Grant Accessibility in System Settings → Privacy &amp; Security so AeroDesk can paste at the cursor.
+      </div>
+    </section>
+
+    <section class="qr-wrap">
+      <div id="qr"></div>
+      <div id="qr-hint" class="muted" data-i18n="qrHint">
+        Scan with the Aerofont app to pair.
+      </div>
+    </section>
+
+    <section class="card">
+      <label data-i18n="hostLabel">Host (LAN IP)</label>
+      <div class="row">
+        <input id="host" type="text" placeholder="192.168.x.x" />
+        <button id="save-host" data-i18n="save">Save</button>
+      </div>
+      <div class="row">
+        <span id="url" class="muted mono"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="section-title" data-i18n="devicesTitle">Devices</div>
+      <div id="devices" class="devices"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-title" data-i18n="receivedTitle">Received text</div>
+      <div id="received" class="received"></div>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>
