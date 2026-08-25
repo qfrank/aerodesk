@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "AeroDesk default window capability",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

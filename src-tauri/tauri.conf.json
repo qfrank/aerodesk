@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AeroDesk",
+  "version": "0.1.2",
+  "identifier": "com.aerofont.aerodesk",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "AeroDesk",
+        "width": 400,
+        "height": 560,
+        "minWidth": 360,
+        "minHeight": 480,
+        "resizable": true,
+        "decorations": true,
+        "visible": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "nsis"],
+    "publisher": "Aerofont",
+    "category": "Utility",
+    "shortDescription": "Desktop companion for Aerofont voice typing",
+    "longDescription": "AeroDesk receives polished text from the Aerofont mobile keyboard over a LAN WebSocket and pastes it at the desktop cursor without touching the clipboard.",
+    "windows": {
+      "nsis": {
+        "installMode": "perMachine",
+        "installerHooks": "./installer-hooks.nsh"
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

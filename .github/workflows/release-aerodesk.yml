@@ -1,0 +1,104 @@
+name: Release AeroDesk
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "aerodesk-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --bundles app,dmg
+          - platform: macos-15-intel
+            args: --bundles app,dmg
+          - platform: windows-latest
+            args: --bundles nsis
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "AeroDesk ${{ github.ref_name }}"
+          releaseBody: "Download AeroDesk for your platform below. Windows build is unsigned — on first run click \"More info\" → \"Run anyway\" in SmartScreen. See the README for pairing with the Aerofont mobile keyboard."
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      - name: Staple macOS artifacts and re-upload
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle
+          for app in macos/*.app; do
+            xcrun stapler staple "$app"
+          done
+          for dmg in dmg/*.dmg; do
+            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+            xcrun stapler staple "$dmg"
+          done
+          arch=$([[ $(uname -m) == "arm64" ]] && echo aarch64 || echo x64)
+          rm -f macos/*.app.tar.gz
+          tar -czf "macos/AeroDesk_${arch}.app.tar.gz" -C macos AeroDesk.app
+          gh release upload "$GITHUB_REF_NAME" macos/*.app.tar.gz dmg/*.dmg --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Normalize installer filename (version-free)
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          arch=$([[ $(uname -m) == "arm64" ]] && echo arm64 || echo x64)
+          cd src-tauri/target/release/bundle/dmg
+          src=$(ls AeroDesk_*.dmg | head -n1)
+          cp "$src" "AeroDesk-${arch}.dmg"
+          gh release upload "$GITHUB_REF_NAME" "AeroDesk-${arch}.dmg" --clobber --repo "$GITHUB_REPOSITORY"
+          gh release delete-asset "$GITHUB_REF_NAME" "$src" -y --repo "$GITHUB_REPOSITORY"
+
+      - name: Normalize installer filename (version-free)
+        if: runner.os == 'Windows' && startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle/nsis
+          src=$(ls AeroDesk_*-setup.exe | head -n1)
+          cp "$src" "AeroDesk-setup.exe"
+          gh release upload "$GITHUB_REF_NAME" "AeroDesk-setup.exe" --clobber --repo "$GITHUB_REPOSITORY"
+          gh release delete-asset "$GITHUB_REF_NAME" "$src" -y --repo "$GITHUB_REPOSITORY"
