@@ -13,6 +13,8 @@ pub struct PairingConfig {
     pub port: u16,
     pub host: String,
     pub name: String,
+    #[serde(default)]
+    pub host_manual: bool,
 }
 
 fn config_path() -> Option<PathBuf> {
@@ -22,8 +24,9 @@ fn config_path() -> Option<PathBuf> {
 pub fn load_or_init() -> PairingConfig {
     if let Some(p) = config_path() {
         if let Ok(s) = fs::read_to_string(&p) {
-            if let Ok(cfg) = serde_json::from_str::<PairingConfig>(&s) {
+            if let Ok(mut cfg) = serde_json::from_str::<PairingConfig>(&s) {
                 if !cfg.token.is_empty() && !cfg.host.is_empty() {
+                    refresh_lan_ip(&mut cfg);
                     return cfg;
                 }
             }
@@ -34,9 +37,21 @@ pub fn load_or_init() -> PairingConfig {
         port: DEFAULT_PORT,
         host: detect_lan_ip(),
         name: detect_hostname(),
+        host_manual: false,
     };
     save(&cfg);
     cfg
+}
+
+fn refresh_lan_ip(cfg: &mut PairingConfig) {
+    if cfg.host_manual {
+        return;
+    }
+    let ip = detect_lan_ip();
+    if ip != "127.0.0.1" && ip != cfg.host {
+        cfg.host = ip;
+        save(cfg);
+    }
 }
 
 pub fn save(cfg: &PairingConfig) {

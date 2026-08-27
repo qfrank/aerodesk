@@ -37,6 +37,7 @@ fn set_host(host: String, state: State<AppState>) -> serde_json::Value {
     {
         let mut cfg = state.cfg.write().unwrap();
         cfg.host = host.trim().to_string();
+        cfg.host_manual = true;
         pairing::save(&cfg);
     }
     build_info(&state.cfg.read().unwrap())
