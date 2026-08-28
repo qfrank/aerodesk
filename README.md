@@ -16,5 +16,8 @@ Runs on macOS and Windows. Tauri v2 + Rust.
 
 The token + port persist to `~/.config/aerodesk/config.json`
 (`~/Library/Application Support/aerodesk/` on macOS, `%APPDATA%\aerodesk\` on
-Windows), so restarts don't break pairing. If the desktop's LAN IP changes
-(DHCP), re-scan.
+Windows), so restarts don't break pairing. The LAN IP is re-detected on every
+launch (a host you saved manually wins until you save a different one); if
+pairing still fails, re-scan. The Windows installer adds a Windows Firewall
+inbound allow rule for `AeroDesk.exe` automatically — if you run it some other
+way, allow it inbound or the phone's connection is silently dropped.

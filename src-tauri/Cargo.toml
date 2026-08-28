@@ -1,6 +1,6 @@
 [package]
 name = "aerodesk"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "AeroDesk — desktop companion; pastes phone-polished text at the cursor (clipboard-free)"
 license = "MIT"
