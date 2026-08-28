@@ -9,3 +9,6 @@ dist/
 
 # local pairing config may be written here during dev runs
 config.json
+
+# macOS finder noise
+.DS_Store
