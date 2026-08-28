@@ -12,3 +12,4 @@ config.json
 
 # macOS finder noise
 .DS_Store
+.claude/
