@@ -18,6 +18,8 @@ jobs:
         include:
           - platform: macos-latest
             args: --bundles app,dmg
+          - platform: macos-15-intel
+            args: --bundles app,dmg
           - platform: windows-latest
             args: --bundles nsis
     runs-on: ${{ matrix.platform }}
@@ -53,3 +55,21 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Staple macOS artifacts and re-upload
+        if: runner.os == 'macOS' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd src-tauri/target/release/bundle
+          for app in macos/*.app; do
+            xcrun stapler staple "$app"
+          done
+          for dmg in dmg/*.dmg; do
+            xcrun stapler staple "$dmg"
+          done
+          arch=$([[ $(uname -m) == "arm64" ]] && echo aarch64 || echo x64)
+          rm -f macos/*.app.tar.gz
+          tar -czf "macos/AeroDesk_${arch}.app.tar.gz" -C macos AeroDesk.app
+          gh release upload "$GITHUB_REF_NAME" macos/*.app.tar.gz dmg/*.dmg --clobber --repo "$GITHUB_REPOSITORY"
