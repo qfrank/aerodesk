@@ -1,11 +1,17 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::net::IpAddr;
 use std::path::PathBuf;
 
 const CONFIG_DIR: &str = "aerodesk";
 const CONFIG_FILE: &str = "config.json";
 pub const DEFAULT_PORT: u16 = 0;
+
+const IFACE_BLOCKLIST: &[&str] = &[
+    "lo", "utun", "awdl", "llw", "anpi", "bridge", "gif", "stf", "vmnet", "veth", "docker", "tun",
+    "tap", "ppp", "demux", "pktap",
+];
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PairingConfig {
@@ -73,9 +79,35 @@ pub fn gen_token() -> String {
 }
 
 fn detect_lan_ip() -> String {
+    if let Some(ip) = lan_ip_from_interfaces() {
+        return ip.to_string();
+    }
     local_ip_address::local_ip()
         .map(|ip| ip.to_string())
         .unwrap_or_else(|_| "127.0.0.1".to_string())
+}
+
+fn lan_ip_from_interfaces() -> Option<IpAddr> {
+    let ifas = local_ip_address::list_afinet_netifas().ok()?;
+    ifas
+        .into_iter()
+        .filter(|(name, ip)| usable_iface(name) && usable_v4(ip))
+        .map(|(_, ip)| ip)
+        .next()
+}
+
+fn usable_iface(name: &str) -> bool {
+    let lower = name.to_ascii_lowercase();
+    !IFACE_BLOCKLIST.iter().any(|p| lower.starts_with(p))
+}
+
+fn usable_v4(ip: &IpAddr) -> bool {
+    match ip {
+        IpAddr::V4(v4) => {
+            !(v4.is_loopback() || v4.is_link_local() || v4.is_broadcast() || v4.is_unspecified())
+        }
+        IpAddr::V6(_) => false,
+    }
 }
 
 fn detect_hostname() -> String {
