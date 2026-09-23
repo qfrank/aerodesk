@@ -1,5 +1,7 @@
 # AeroDesk
 
+**Website:** <https://aerofont.com>
+
 AeroDesk is the **cross-platform desktop companion** for Aerofont. The phone
 records + polishes text; AeroDesk receives it over a **LAN WebSocket** and
 **pastes it at the desktop cursor — without touching the clipboard**.
